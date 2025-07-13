@@ -29,6 +29,9 @@
                 navigator.mediaDevices.getUserMedia(constraints)
                     .then(stream => {
                         video.srcObject = stream;
+                        console.log('Camera access granted');
+                        result.textContent = 'Camera access granted'; 
+                        detect();
                     })
                     .catch(error => {
                         console.error('Error accessing camera:', error);
@@ -52,8 +55,27 @@
             });
         }
 
-        const detect = () => {
+        const videoReady = () => video.readyState > 1;
+
+        const waitForVideoReady = async () => {
+            console.log('videoReady', video.readyState);
+            if (!videoReady()) {
+                await new Promise(resolve => {
+                    setTimeout(() => {
+                        console.log('waited')
+                        resolve();
+                    }, 100);
+                });
+                await waitForVideoReady();
+            }
+        }
+
+        const detect = async () => {
             if (detector) {
+                if (!videoReady()) {
+                    await waitForVideoReady();
+                }
+     
                 detector.detect(video).then(barcodes => {
                     if (barcodes.length > 0) {
                         barcodes.forEach(barcode => {
@@ -69,6 +91,9 @@
                         result.textContent = 'No barcodes detected.';
                         reqId = requestAnimationFrame(detect);
                     }
+                }).catch(e => {
+                    console.log('e', detector)
+                    console.error('error detecting barcodes:', e);
                 })
 
             } else {
@@ -98,7 +123,6 @@
             const detector = getDetector();
             startButton.addEventListener('click', () => {
                 requestCamera();
-                reqId = requestAnimationFrame(detect);
             });
         }
     </script>
