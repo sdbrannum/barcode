@@ -38,7 +38,7 @@
         const getDetector = () => {
             // Check if BarcodeScanner is available
             const formats = ['qr_code', 'itf'];
-            BarcodeDetector.getSupportedFormats().then(supportedFormats => {
+            return BarcodeDetector.getSupportedFormats().then(supportedFormats => {
                 const notSupported = formats.filter(format => !supportedFormats.includes(format));
                 if (notSupported.length > 0) {
                     console.warn('The following formats are not supported:', notSupported);
