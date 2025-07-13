@@ -29,7 +29,6 @@
                 navigator.mediaDevices.getUserMedia(constraints)
                     .then(stream => {
                         video.srcObject = stream;
-                        reqId = requestAnimationFrame(detect);
                     })
                     .catch(error => {
                         console.error('Error accessing camera:', error);
@@ -68,8 +67,8 @@
                     } else {
                         console.log('No barcodes detected.');
                         result.textContent = 'No barcodes detected.';
+                        reqId = requestAnimationFrame(detect);
                     }
-                    reqId = requestAnimationFrame(detect);
                 })
 
             } else {
@@ -89,6 +88,7 @@
             const detector = getDetector();
             startButton.addEventListener('click', () => {
                 requestCamera();
+                reqId = requestAnimationFrame(detect);
             });
         }
     </script>
