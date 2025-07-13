@@ -35,44 +35,43 @@
             }
         }
 
+        let detector;
         const getDetector = () => {
             // Check if BarcodeScanner is available
             const formats = ['qr_code', 'itf'];
-            return BarcodeDetector.getSupportedFormats().then(supportedFormats => {
+            BarcodeDetector.getSupportedFormats().then(supportedFormats => {
                 const notSupported = formats.filter(format => !supportedFormats.includes(format));
                 if (notSupported.length > 0) {
                     console.warn('The following formats are not supported:', notSupported);
                     result.textContent = 'The following formats are not supported: ' + notSupported.join(',');
-                    return null;
                 } else {
-                    return new BarcodeDetector({ formats: ['qr_code', 'itf'] });
+                    detector = new BarcodeDetector({ formats: ['qr_code', 'itf'] });
                 }
             });
         }
 
+        let dector;
         const detect = () => {
-            const detector = getDetector().then(detector => {
-                if (detector) {
-                    detector.detect(video).then(barcodes => {
-                        if (barcodes.length > 0) {
-                            barcodes.forEach(barcode => {
-                                console.log('Barcode detected:', barcode);
-                                result.textContent = `Barcode detected: ${barcode.rawValue}`;
-                                if (reqId) {
-                                    cancelAnimationFrame(reqId);
-                                    reqId = null;
-                                }
-                            });
-                        } else {
-                            console.log('No barcodes detected.');
-                            result.textContent = 'No barcodes detected.';
-                        }
-                    }).catch(error => {
-                        console.error('Error detecting barcodes:', error);
-                        result.textContent = 'Error detecting barcodes.';
-                    });
-                }
-            });
+            if (dector) {
+                detector.detect(video).then(barcodes => {
+                    if (barcodes.length > 0) {
+                        barcodes.forEach(barcode => {
+                            console.log('Barcode detected:', barcode);
+                            result.textContent = `Barcode detected: ${barcode.rawValue}`;
+                            if (reqId) {
+                                cancelAnimationFrame(reqId);
+                                reqId = null;
+                            }
+                        });
+                    } else {
+                        console.log('No barcodes detected.');
+                        result.textContent = 'No barcodes detected.';
+                    }
+                })
+            } else {
+                console.warn('BarcodeDetector is not initialized.');
+                result.textContent = 'BarcodeDetector is not initialized.';
+            }
         }
 
         const video = document.querySelector('#video')
@@ -83,6 +82,7 @@
             console.error('BarcodeDetector API is not supported in this browser.');
             result.textContent = 'BarcodeDetector API is not supported in this browser.';
         } else {
+            const detector = getDetector();
             startButton.addEventListener('click', () => {
                 requestCamera();
                 reqId = requestAnimationFrame(detect);
