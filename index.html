@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BarcodeScanner demo</title>
+</head>
+
+<body>
+    <h1>BarcodeScanner Demo</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="start">Start</button>
+    <p id="result"></p>
+    <script>
+        let reqId;
+        const requestCamera = () => {
+            // Check if device has camera
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                // Use video without audio
+                const constraints = {
+                    video: {
+                        facingMode: 'environment', // Use rear camera
+                    },
+                    audio: false
+                }
+
+                // Start video stream
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(stream => video.srcObject = stream)
+                    .catch(error => {
+                        console.error('Error accessing camera:', error);
+                        result.textContent = 'Error accessing camera: ' + error.message;
+                    });
+            }
+        }
+
+        const getDetector = () => {
+            // Check if BarcodeScanner is available
+            const formats = ['qr_code', 'itf'];
+            BarcodeDetector.getSupportedFormats().then(supportedFormats => {
+                const notSupported = formats.filter(format => !supportedFormats.includes(format));
+                if (notSupported.length > 0) {
+                    console.warn('The following formats are not supported:', notSupported);
+                    result.textContent = 'The following formats are not supported: ' + notSupported.join(',');
+                    return null;
+                } else {
+                    return new BarcodeDetector({ formats: ['qr_code', 'itf'] });
+                }
+            });
+        }
+
+        const detect = () => {
+            const detector = getDetector().then(detector => {
+                if (detector) {
+                    detector.detect(video).then(barcodes => {
+                        if (barcodes.length > 0) {
+                            barcodes.forEach(barcode => {
+                                console.log('Barcode detected:', barcode);
+                                result.textContent = `Barcode detected: ${barcode.rawValue}`;
+                                if (reqId) {
+                                    cancelAnimationFrame(reqId);
+                                    reqId = null;
+                                }
+                            });
+                        } else {
+                            console.log('No barcodes detected.');
+                            result.textContent = 'No barcodes detected.';
+                        }
+                    }).catch(error => {
+                        console.error('Error detecting barcodes:', error);
+                        result.textContent = 'Error detecting barcodes.';
+                    });
+                }
+            });
+        }
+
+        const video = document.querySelector('#video')
+        const result = document.querySelector('#result');
+        const startButton = document.querySelector('#start');
+        const stopButton = document.querySelector('#stop');
+        if (!('BarcodeDetector' in window)) {
+            console.error('BarcodeDetector API is not supported in this browser.');
+            result.textContent = 'BarcodeDetector API is not supported in this browser.';
+        } else {
+            startButton.addEventListener('click', () => {
+                requestCamera();
+                reqId = requestAnimationFrame(detect);
+            });
+        }
+    </script>
+</body>
+
+</html>
