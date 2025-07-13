@@ -77,6 +77,16 @@
             }
         }
 
+        if (!('requestAnimationFrame' in window)) {
+            result.textContent = 'requestAnimationFrame is not supported, using setTimeout instead.';
+            window.requestAnimationFrame = (callback) => {
+                return setTimeout(callback, 1000 / 60);
+            };
+            window.cancelAnimationFrame = (id) => {
+                clearTimeout(id);
+            };
+        }
+
         const video = document.querySelector('#video')
         const result = document.querySelector('#result');
         const startButton = document.querySelector('#start');
